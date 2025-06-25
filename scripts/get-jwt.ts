@@ -2,10 +2,10 @@
 // Make sure to replace with your actual Supabase URL, anon key, and user credentials
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = 'your-supabase-project-url.supabase.co';
-const SUPABASE_ANON_KEY = 'your-anon-key'; // Use ANON key for client-side auth
-const USER_EMAIL = 'user-email';
-const USER_PASSWORD = 'user-password';
+const SUPABASE_URL = 'https://mxdiobphbexefaioxblk.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14ZGlvYnBoYmV4ZWZhaW94YmxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyNTQ4NzYsImV4cCI6MjA2NTgzMDg3Nn0.7sGnFyeTkezjDNtmatKuTmzeyjvJDxJJ7IZ3hSqgaJ0'; // Use ANON key for client-side auth
+const USER_EMAIL = 'user@user.com';
+const USER_PASSWORD = 'user';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 

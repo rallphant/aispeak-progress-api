@@ -6,30 +6,25 @@ import { CreateUserProgressPayload, UserProgress, LeaderboardEntry, UpdateUserPr
 import { isSameDay, datesAreConsecutiveDays } from '../utils/dateUtils';
 
 /**
- * Creates a new progress record for the authenticated user.
- * The userId in the request body must match the authenticated user's ID.
- * @param req - The authenticated request object, containing user ID and request body.
+ * Creates a new progress record for the currently authenticated user.
+ * @param req - The authenticated request object, containing the user's ID from the JWT.
  * @param res - The response object.
  * @returns A JSON response with the created user progress record or an error message.
  */
 export const createUserProgress = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const authenticatedUserId = req.user?.id;
-  const { userId } = req.body as CreateUserProgressPayload;
 
-  if (!userId) {
-    res.status(400).json({ error: 'userId is required' });
-    return;
-  }
+  
 
-  if (authenticatedUserId !== userId) {
-    res.status(403).json({ error: 'Forbidden: You can only create a progress record for yourself.' });
+  if (!authenticatedUserId) {
+    res.status(401).json({ error: 'Authentication error: User ID not found in token.' });
     return;
   }
 
   try {
     const { data, error } = await supabase
       .from('user_progress')
-      .insert([{ user_id: userId }])
+      .insert([{ user_id: authenticatedUserId }])
       .select()
       .single();
 
@@ -52,17 +47,15 @@ export const createUserProgress = async (req: AuthenticatedRequest, res: Respons
 
 /**
  * Retrieves the progress record for the authenticated user.
- * The userId in the URL parameters must match the authenticated user's ID.
- * @param req - The authenticated request object, containing user ID and URL parameters.
+ * @param req - The authenticated request object, containing the user's ID from the JWT.
  * @param res - The response object.
  * @returns A JSON response with the user progress record or an error message.
  */
 export const getUserProgress = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  const { userId } = req.params;
   const authenticatedUserId = req.user?.id;
 
-  if (authenticatedUserId !== userId) {
-    res.status(403).json({ error: 'Forbidden: You can only view your own progress.' });
+  if (!authenticatedUserId) {
+    res.status(401).json({ error: 'Authentication error: User ID not found in token.' });
     return;
   }
 
@@ -70,7 +63,7 @@ export const getUserProgress = async (req: AuthenticatedRequest, res: Response):
     const { data, error } = await supabase
       .from('user_progress')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', authenticatedUserId)
       .single();
 
     if (error && error.code !== 'PGRST116') {
@@ -92,18 +85,16 @@ export const getUserProgress = async (req: AuthenticatedRequest, res: Response):
 
 /**
  * Updates an existing progress record for the authenticated user.
- * The userId in the URL parameters must match the authenticated user's ID.
- * @param req - The authenticated request object, containing user ID, URL parameters, and request body with updates.
+ * @param req - The authenticated request object, containing the user's ID and the request body with updates.
  * @param res - The response object.
  * @returns A JSON response with the updated user progress record or an error message.
  */
 export const updateUserProgress = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  const { userId } = req.params;
   const payload = req.body as UpdateUserProgressPayload; // Use the specific payload type
   const authenticatedUserId = req.user?.id;
 
-  if (authenticatedUserId !== userId) {
-    res.status(403).json({ error: 'Forbidden: You can only update your own progress.' });
+  if (!authenticatedUserId) {
+    res.status(401).json({ error: 'Authentication error: User ID not found in token.' });
     return;
   }
   
@@ -127,7 +118,7 @@ export const updateUserProgress = async (req: AuthenticatedRequest, res: Respons
     const { data: currentProgress, error: fetchError } = await supabase
       .from('user_progress')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', authenticatedUserId)
       .single();
 
     if (fetchError && fetchError.code !== 'PGRST116') {
@@ -198,7 +189,7 @@ export const updateUserProgress = async (req: AuthenticatedRequest, res: Respons
     const { data, error } = await supabase
       .from('user_progress')
       .update(updateData)
-      .eq('user_id', userId)
+      .eq('user_id', authenticatedUserId)
       .select()
       .single();
 
@@ -258,26 +249,26 @@ export const getLeaderboard = async (req: AuthenticatedRequest, res: Response): 
 
 /**
 * Finds users with similar activity patterns based on vector embeddings.
-* @param req - The authenticated request object, containing the target userId in params.
+* * This finds users similar to the *currently authenticated user*.
+* @param req - The authenticated request object.
 * @param res - The response object.
 * @returns A JSON response with a list of similar user_ids or an error message.
 */
 export const findSimilarUsers = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-const { userId } = req.params;
-const authenticatedUserId = req.user?.id; // Optional: restrict who can see recommendations
+const authenticatedUserId = req.user?.id; 
 
-// Example: Allow any authenticated user to use this, or restrict to self/admin
-// if (authenticatedUserId !== userId && !req.user?.isAdmin) {
-//   res.status(403).json({ error: 'Forbidden: You can only find similar users for yourself.' });
-//   return;
-// }
+if (!authenticatedUserId) {
+  res.status(401).json({ error: 'Authentication error: User ID not found in token.' });
+  return;
+}
+
 
 try {
   // 1. Get the embedding of the target user
   const { data: targetUserProgress, error: fetchError } = await supabase
     .from('user_progress')
     .select('activity_embedding')
-    .eq('user_id', userId)
+    .eq('user_id', authenticatedUserId)
     .single();
 
   if (fetchError || !targetUserProgress) {
@@ -299,7 +290,7 @@ try {
       query_embedding: targetUserProgress.activity_embedding, // Pass as array
       match_threshold: 1.0, // Example: Max L2 distance to consider a match (lower is more similar)
       match_count: 5,       // Number of similar users to return
-      exclude_user_id: userId // Exclude the user themselves
+      exclude_user_id: authenticatedUserId // Exclude the user themselves
     });
 
   if (similarityError) {

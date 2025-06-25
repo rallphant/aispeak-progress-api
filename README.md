@@ -127,12 +127,11 @@ All endpoints are prefixed with `/progress`.
 *   **`POST /progress`**
     *   Description: Creates a new progress record for the authenticated user.
     *   Auth: Required.
-    *   Body: `{ "userId": "user-uuid-from-supabase-auth" }` (userId must match authenticated user)
-*   **`GET /progress/:userId`**
-    *   Description: Retrieves the progress record for the specified user.
+*   **`GET /progress/`**
+    *   Description: Retrieves the progress record for the authenticated user.
     *   Auth: Required. User can only retrieve their own progress.
-*   **`PUT /progress/:userId`**
-    *   Description: Updates the progress record for the specified user.
+*   **`PUT /progress/`**
+    *   Description: Updates the progress record for the authenticated user.
     *   Auth: Required. User can only update their own progress.
     *   Body: `{ "level_xp": 50, "total_xp": 150, ... }` (fields from `UpdateUserProgressPayload`)
 *   **`GET /progress/leaderboard`**
@@ -141,9 +140,8 @@ All endpoints are prefixed with `/progress`.
     *   Query Parameters (Optional):
         *   `page` (number, default: 1): The page number for pagination.
         *   `limit` (number, default: 10, max: 100): The number of items per page.
-*   **`GET /progress/similar/:userId`**
-    *   Description: Finds users with activity patterns similar to the specified user, based on simulated vector embeddings. Requires `pgvector` setup.
+*   **`GET /progress/similar/`**
+    *   Description: Finds users with activity patterns similar to the authenticated user, based on simulated vector embeddings. Requires `pgvector` setup.
     *   Auth: Required.
-    *   Example: `/progress/similar/user-uuid-from-supabase-auth`
 
 ---

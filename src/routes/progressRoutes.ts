@@ -14,8 +14,8 @@ const router = express.Router();
 router.get('/leaderboard', protect, getLeaderboard);
 
 router.post('/', protect, createUserProgress);
-router.get('/similar/:userId', protect, findSimilarUsers); // New route for similarity search
-router.get('/:userId', protect, getUserProgress);
-router.put('/:userId', protect, updateUserProgress);
+router.get('/similar/', protect, findSimilarUsers);
+router.get('/', protect, getUserProgress);
+router.put('/', protect, updateUserProgress);
 
 export default router;
